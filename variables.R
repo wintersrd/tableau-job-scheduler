@@ -1,8 +1,9 @@
 # Database variables
-number.of.cores<-4 # Increasing the number will allow modeling and data checks to happen faster but will impact network and CPU
+number.of.cores<-4 # Increasing the number will allow modeling and data checks to happen faster but will impact network and CPU. Currently unused
 tableau.server<-odbcConnect('tableau_server')
 tracking.database<-odbcConnect('tableau_server')
 tracking.schema<-"public"
+site.id<-1 # Currently it's too much of a pain to make this work on multiple sites so configured to filter to one
 
 # Script control variables
 size.estimator.threshold<-1 # Size in MB used to determine whether or not the scheduler should try and schedule a job

@@ -1,7 +1,9 @@
 source('functions.R')
+
+load_libraries(c('shiny','shinyIncubator','ggplot2','RODBC'))
+
 source('variables.R')
 
-load_libraries(c('shiny','shinyIncubator','ggplot2'))
 event.history<-sqlQuery(tracking.database,paste("select date_trunc('hour',updateTime) as reportHour
                     , count(*) as updatesScheduled
 
@@ -105,8 +107,9 @@ output
     }
 
     sqlQuery(tracking.database,paste("update ",tracking.schema,".job_scheduler set sourceFactTable = '",input$newsourcefact,"'
+                                                                          , odbcName = '",input$odbcname,"'
                                                                           , lastModifiedName = '",Sys.getenv("USERNAME"),"'
-                                                                          , lastModifiedTime = current_timestamp where jobid = ", as.numeric(input$jobid),";commit;",sep="" ))
+                                                                          , lastModifiedTime = current_timestamp where jobid in (", input$jobid,");commit;",sep="" ))
     output$scheduler<-renderDataTable(function(){sqlQuery(tracking.database,paste("select *
 
                   from ",tracking.schema,".job_scheduler

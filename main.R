@@ -1,3 +1,5 @@
+setwd('X:/TableauScheduler/') # R needs to know where to find all the files
+
 source('functions.R') # Load the necessary functions
 source('variables.R')
 

@@ -11,6 +11,7 @@ potential.jobs<-sqlQuery(tracking.database, paste("select dataConnector
 													, lastRowCount
 													, jobId
 													, confidence
+													, sourceType
 
 													from ", tracking.schema,".job_scheduler
 
@@ -23,7 +24,8 @@ if(nrow(potential.jobs)==0){quit()} # Terminate the instance if the number of po
 
 job.list<-NULL
 for (i in 1:nrow(potential.jobs)){
-	jobs.per.day<-max(potential.jobs[i,5]*(1/potential.jobs[i,9],max.jobs.per.day)
+	jobs.per.day<-potential.jobs[i,5]*(1/if(potential.jobs[i,9]<0.1){0.1} else {potential.jobs[i,9]})
+	jobs.per.day<-if(jobs.per.day>max.jobs.per.day){max.jobs.per.day} else {jobs.per.day}
 	hours.to.run<-potential.jobs[i,4]+seq(0,(jobs.per.day-1))*round(24/jobs.per.day,0) # Determine the programmatic hours per day to run
 	hours.to.run<-c(hours.to.run[hours.to.run<24],hours.to.run[hours.to.run>=24]-24) # Wrap hours > 23 around the clock
 	last.run.hour<-as.numeric(format(potential.jobs[i,6],"%H"))
@@ -41,15 +43,16 @@ if(length(job.list)==0){quit()} # Terminate the instance if there are no jobs to
 
 job.list<-unique(job.list)
 
-updated.datasources<-foreach(i=1:nrow(job.list)),.combine=rbind) %dopar% { # This loop will check corresponding fact tables for new data and create a record on the fact table
+updated.datasources<-NULL
+for (i in 1:nrow(job.list)) { # This loop will check corresponding fact tables for new data and create a record on the fact table
 						db.connection<-odbcConnect(job.list[i,2])
 						db.check<-sqlQuery(db.connection,paste("select count(*) as currentRowCount
 																from ",job.list[i,3],"
 																having count(*) > ",job.list[i,7],sep=""))
 						if(nrow(db.check)>0){
-							output.record<-c(job.list[i,1],job.list[i,8],job.list[i,7],db.check[1.1])
-							colnames(output.record)<-c("dataconnector","jobid","lastrowcount","currentrowcount")
-							output.record
+							output.record<-c(job.list[i,1],job.list[i,8],job.list[i,7],db.check[1,1],job.list[i,10])
+							colnames(output.record)<-c("dataconnector","jobid","lastrowcount","currentrowcount","sourcetype")
+							updated.datasources<-rbind(updated.datasources,output.record)
 						}
 						odbcClose(db.connection)
 					}
@@ -75,5 +78,5 @@ for(i in 1:nrow(updated.datasources)){
 										set lastRun = current_timestamp
 										, lastRowCount = ", updated.datasources[i,4],"
 										where jobid = ", updated.datasources[i,2], sep=""))
-	system(paste("tabcmd refreshextracts --url ",updated.datasources[i,1],sep=""), wait=F)
+	system(paste('tabcmd refreshextracts --', updated.datasources[i,5], ' "',updated.datasources[i,1],'"',sep=''), wait=F)
 }

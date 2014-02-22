@@ -10,7 +10,7 @@ odbc.connections<-sqlQuery(tracking.database,paste("select connectionId
 									, sourceServer
 
 									from ",tracking.schema,".odbc_map
-									order by odbcName asc",sep=""))
+									order by odbcName asc",sep=""), stringsAsFactors=F)
 scheduler.tasks<-sqlQuery(tracking.database,paste("select *
 
 									from ",tracking.schema,".job_scheduler
@@ -50,6 +50,7 @@ shinyUI(pageWithSidebar(
       HTML("<h3>Update Workbook/Data Source Information</h3>"),
       
       textInput("jobid","Enter a Connection ID"),
+      selectInput("scheduleodbc","Choose an ODBC connection to use",choices=as.list(odbc.connections$odbcname)),
       textInput("newsourcefact","Fact Table to Monitor (Format: schema.table)"),
       br(),
       actionButton("jobmodif","Update Reference Table"),
