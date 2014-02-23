@@ -16,6 +16,8 @@ This is a simple scheduled utility plus front end to manage database connections
 
 * Change tracking for management data in scheduler
 
+* Allows retrieval of subscriber email addresses to notify in case of issues (future version will have one-click email from the interface)
+
 
 # To get started:
 1. Clone the repository
@@ -46,8 +48,8 @@ Using the utility:
 
 On first run, the script will create the database structure and capture all necessary information from Tableau's database. Navigating to http://localhost:9100 will expose the interface with three options:
 
-	**Manage ODBC links:** All native database connections will be available, add a corresponding ODBC DSN. This information will be passed to the job scheduler table on next scheduled run and will be available for all new data connections added from the same source.
+**Manage ODBC links:** All native database connections will be available, add a corresponding ODBC DSN. This information will be passed to the job scheduler table on next scheduled run and will be available for all new data connections added from the same source.
 
-	**Manage job schedules:** Provide a corresponding fact table to monitor for updates (uses a simple count). Any connections via ODBC or directly embedded in workbooks are not available from tableau and so must be manually added using the dropdown.
+**Manage job schedules:** Provide a corresponding fact table to monitor for updates (uses a simple count). Any connections via ODBC or directly embedded in workbooks are not available from tableau and so must be manually added using the dropdown.
 
-	**Monitor scheduler:** A simple view to see the number of jobs scheduled per hour and the results of the last 50 scheduled runs.
+**Monitor scheduler:** A simple view to see the number of jobs scheduled per hour and the results of the last 50 scheduled runs.
