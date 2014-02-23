@@ -5,6 +5,7 @@ if(nrow(models.to.update)>0){
 	for(i in 1:nrow(models.to.update)){ # We single thread this due to the need to do updates to the table and locking = BAD
 		modeling.data<-sqlQuery(tracking.database,paste("select * from ",tracking.schema,".job_scheduler_events
 													where jobid = ",models.to.update[i,"jobid"],sep=""))
+		if(nrow(modeling.data)>5){
 		modeling.data$hour<-as.numeric(format(modeling.data$updatetime,"%H"))
 		baseline.update.time<-Mode(modeling.data$hour) # We will take the mode to determine which hour to frame our timing around
 		
@@ -19,6 +20,7 @@ if(nrow(models.to.update)>0){
 										, confidence = ", confidence,"
 										, modelLastUpdate = current_timestamp
 										where jobid = ",models.to.update[i,"jobid"],";commit;",sep=""))
+		}
 	}
 	# Clean up the database. If it's over the row limit, prune it back to 20% below limit
 	current.row.count<-sqlQuery(tracking.database,paste("select count(*) from ",tracking.schema,".job_scheduler_events"))[1,1]

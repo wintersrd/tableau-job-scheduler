@@ -80,3 +80,4 @@ for(i in 1:nrow(updated.datasources)){
 										where jobid = ", updated.datasources[i,2], sep=""))
 	system(paste('tabcmd refreshextracts --', updated.datasources[i,5], ' "',updated.datasources[i,1],'"',sep=''), wait=F)
 }
+setwd(default.working.directory)

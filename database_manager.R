@@ -15,14 +15,14 @@ sqlQuery(tracking.database, paste("create table if not exists ",tracking.schema,
 									, modelLastUpdate timestamp
 									, lastModifiedName varchar(500)
 									, lastModifiedTime timestamp
-									)",sep=""))
+									);commit;",sep=""))
 
 sqlQuery(tracking.database, paste("create table if not exists ",tracking.schema,".job_scheduler_events (
 									jobId int
 									, updateTime timestamp
 									, lastRowCount int
 									, currentRowCount int
-									)", sep=""))
+									);commit;", sep=""))
 
 sqlQuery(tracking.database,paste("create table if not exists ",tracking.schema,".odbc_map (
 									connectionId serial
@@ -31,7 +31,23 @@ sqlQuery(tracking.database,paste("create table if not exists ",tracking.schema,"
 									, sourceServer varchar(500)
 									, lastModifiedName varchar(500)
 									, lastModifiedTime timestamp									
-									)"))
+									);commit;"))
+
+# Ensure target tables exist and are populated
+sqlQuery(tableau.database, "create table if not exists backgrounder_refresh
+									(
+									backgrounder_id int
+									, last_refresh timestamp
+									);commit;")
+
+sqlQuery(tracking.database,paste("create table if not exists ",tracking.schema,".tableau_error_tracking (
+									jobName varchar(500)
+									, errorMessage varchar(2000)
+									, reportTime timestamp
+									, reportedRunTimeSeconds int
+									, thresholdRunTimeSeconds int
+									, originalRunTime timestamp
+									); commit;",sep=""))
 
 # Make sure all connectors are present in the necessary tables - even before able to auto-schedule, we can start gathering performance data
 data.connectors<-sqlQuery(tableau.server,paste("select name as dataConnector
@@ -81,8 +97,8 @@ for (i in 1:nrow(new.odbc.maps)){
 }
 
 # We want each job to use the most current ODBC information for checking, so will update the tables to align. ODBC has to be tracked on the job_scheduler table due to tableau not displaying the ODBC name publicly
-sqlQuery(tracking.database,paste("update ", tracking.schema,".job_scheduler j
+try(sqlQuery(tracking.database,paste("update ", tracking.schema,".job_scheduler j
 									set odbcName = o.odbcName
 								from ",tracking.schema,".odbc_map o
 								where j.sourceDbType = o.sourceDbType
-									and j.sourceServer = o.sourceServer", sep=""))
+									and j.sourceServer = o.sourceServer", sep="")),silent=F)
