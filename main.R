@@ -1,4 +1,4 @@
-setWd('X:/TableauScheduler/') # Working Directory where main can find all the utilities
+setWd('X:/TableauScheduler/') # Working Directory where main can find all the scripts
 
 source('functions.R') # Load the necessary functions
 
