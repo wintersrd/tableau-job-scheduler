@@ -3,15 +3,15 @@ source('variables.R')
 
 load_libraries(c('shiny','shinyIncubator','ggplot2','RODBC'))
 
-tracking.server<-odbcConnect(tracking.database.odbc.dsn)
-tableau.server<-odbcConnect(tableau.odbc.dsn)
+tracking.database<-odbcConnect(tracking.database.odbc.dsn)
+tableau.database<-odbcConnect(tableau.odbc.dsn)
 
-event.history<-sqlQuery(tracking.server,paste("select date_trunc('hour',updateTime) as reportHour
+event.history<-sqlQuery(tracking.database,paste("select date_trunc('hour',updateTime) as reportHour
                                                               , count(*) as updatesScheduled
                                                             from ",tracking.schema,".job_scheduler_events
                                                             group by 1",sep=""))
 
-subscription.times<-sqlQuery(tableau.server,"select schedule_name 
+subscription.times<-sqlQuery(tableau.database,"select schedule_name 
                                               from _subscriptions 
                                               group by 1 
                                               order by 1")
@@ -21,7 +21,7 @@ shinyServer(function(input, output) {
 #output$schedules<-as.list(unique(subscription.times))
 emailselection<-reactive({ input$schedule })
 users<-reactive({
-        sqlQuery(tableau.server,paste("with lastRecord as (select user_id, max(id) as lastId
+        sqlQuery(tableau.database,paste("with lastRecord as (select user_id, max(id) as lastId
                                                                       from hist_users
                                                                       group by 1)
                                                           , currentRecord as (select h.user_id
@@ -43,7 +43,7 @@ users<-reactive({
         })
 
 output$odbcmap<-renderDataTable({
-        sqlQuery(tracking.server,paste("select connectionId
+        sqlQuery(tracking.database,paste("select connectionId
                                                     , odbcName
                                                     , sourceDbType
                                                     , sourceServer
@@ -53,7 +53,7 @@ output$odbcmap<-renderDataTable({
         })
 
 output$scheduler<-renderDataTable(function(){
-          sqlQuery(tracking.server,paste("select *
+          sqlQuery(tracking.database,paste("select *
                                                           from ",tracking.schema,".job_scheduler
                                                           order by sourceDbType
                                                             , sourceServer
@@ -61,7 +61,7 @@ output$scheduler<-renderDataTable(function(){
         })
 
 output$schedulerrecenthistory<-renderDataTable(function(){
-          sqlQuery(tracking.server,paste("select dataConnector
+          sqlQuery(tracking.database,paste("select dataConnector
                                                       , sourceServer
                                                       , sourceFactTable
                                                       , updateTime
@@ -119,12 +119,12 @@ output$modifodbc=reactivePrint(function(){
               return(msg)
               }
 
-            sqlQuery(tracking.server,paste("update ",tracking.schema,".odbc_map set odbcName = '",input$newodbc,"'
+            sqlQuery(tracking.database,paste("update ",tracking.schema,".odbc_map set odbcName = '",input$newodbc,"'
                                                                           , lastModifiedName = '",Sys.getenv("USERNAME"),"'
                                                                           , lastModifiedTime = current_timestamp where connectionId = ", input$odbcid,";commit;",sep="" ))
             
             output$odbcmap<-renderDataTable({
-                sqlQuery(tracking.server,paste("select connectionId
+                sqlQuery(tracking.database,paste("select connectionId
                           , odbcName
                           , sourceDbType
                           , sourceServer
@@ -159,7 +159,7 @@ modifjob=reactive(function(){
     }
 
     sqlQuery(tracking.server,paste("update ",tracking.schema,".job_scheduler set sourceFactTable = '",input$newsourcefact,"'
-                                                                          , odbcName = '",input$odbcname,"'
+                                                                          , odbcName = '",input$scheduleodbc,"'
                                                                           , lastModifiedName = '",Sys.getenv("USERNAME"),"'
                                                                           , lastModifiedTime = current_timestamp where jobid in (", input$jobid,");commit;",sep="" ))
     output$scheduler<-renderDataTable(function(){sqlQuery(tracking.server,paste("select *

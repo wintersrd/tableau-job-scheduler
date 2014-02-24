@@ -20,7 +20,7 @@ potential.jobs<-sqlQuery(tracking.database, paste("select dataConnector
 
 													"), stringsAsFactors=F)
 
-if(nrow(potential.jobs)==0){quit()} # Terminate the instance if the number of potential jobs is zero
+if(nrow(potential.jobs)==0){break()} # Terminate the instance if the number of potential jobs is zero
 
 job.list<-NULL
 for (i in 1:nrow(potential.jobs)){
@@ -39,7 +39,7 @@ for (i in 1:nrow(potential.jobs)){
 		job.list<-rbind(job.list,potential.jobs[i,])
 	}
 }
-if(length(job.list)==0){quit()} # Terminate the instance if there are no jobs to check
+if(length(job.list)==0){break()} # Terminate the instance if there are no jobs to check
 
 job.list<-unique(job.list)
 
@@ -51,11 +51,12 @@ for (i in 1:nrow(job.list)) { # This loop will check corresponding fact tables f
 																having count(*) > ",job.list[i,7],sep=""))
 						if(nrow(db.check)>0){
 							output.record<-c(job.list[i,1],job.list[i,8],job.list[i,7],db.check[1,1],job.list[i,10])
-							colnames(output.record)<-c("dataconnector","jobid","lastrowcount","currentrowcount","sourcetype")
+							names(output.record)<-c("dataconnector","jobid","lastrowcount","currentrowcount","sourcetype")
 							updated.datasources<-rbind(updated.datasources,output.record)
 						}
 						odbcClose(db.connection)
 					}
+updated.datasources<-data.frame(updated.datasources)
 
 # In the event that no new records were found, we'll increment the scheduler by our chosen interval so it will run again
 stale.datasources<-job.list[!job.list$jobid %in% as.list(updated.datasources$jobid),8]
@@ -67,10 +68,10 @@ if(length(stale.datasources)>0){
 									where jobId in (",stale.datasources,");commit;",sep=""))
 }
 
-if(nrow(updated.datasources)==0){quit()} # Exit if there are no extracts to refresh
+if(nrow(updated.datasources)==0){break()} # Exit if there are no extracts to refresh
 
 setwd(tabcmd.directory)
-system(paste("tabcmd login -username ",tableau.server.username," -password ",tableau.server.password,sep=""), wait=T)
+system(paste("tabcmd login -s ",tableau.server.path," -u ",tableau.server.username," -p ",tableau.server.password,sep=""), wait=T)
 
 for(i in 1:nrow(updated.datasources)){
 	sqlQuery(tracking.database, paste("insert into ",tracking.schema,".job_scheduler_events values (",updated.datasources[i,2],", current_timestamp ,",updated.datasources[i,3],",",updated.datasources[i,4],");commit;",sep=""))
@@ -78,6 +79,6 @@ for(i in 1:nrow(updated.datasources)){
 										set lastRun = current_timestamp
 										, lastRowCount = ", updated.datasources[i,4],"
 										where jobid = ", updated.datasources[i,2], sep=""))
-	system(paste('tabcmd refreshextracts --', updated.datasources[i,5], ' "',updated.datasources[i,1],'"',sep=''), wait=F)
+	system(paste('tabcmd refreshextracts --', updated.datasources[i,5], ' "',updated.datasources[i,1],'"',sep=''), wait=T)
 }
 setwd(default.working.directory)

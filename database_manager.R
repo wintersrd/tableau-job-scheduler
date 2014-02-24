@@ -1,3 +1,6 @@
+tracking.database<-odbcConnect(tracking.database.odbc.dsn)
+tableau.database<-odbcConnect(tableau.odbc.dsn)
+
 # Table structures
 sqlQuery(tracking.database, paste("create table if not exists ",tracking.schema,".job_scheduler (
 									jobId serial
@@ -50,7 +53,7 @@ sqlQuery(tracking.database,paste("create table if not exists ",tracking.schema,"
 									); commit;",sep=""))
 
 # Make sure all connectors are present in the necessary tables - even before able to auto-schedule, we can start gathering performance data
-data.connectors<-sqlQuery(tableau.server,paste("select name as dataConnector
+data.connectors<-sqlQuery(tableau.database,paste("select name as dataConnector
 											, cast(null as varchar(500)) as sourceDbType
 											, cast(null as varchar(500)) as sourceServer
 											, 'workbook' as sourceType

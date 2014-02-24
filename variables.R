@@ -8,8 +8,9 @@ tracking.schema<-"public"
 site.id<-1 # Currently it's too much of a pain to make this work on multiple sites so configured to filter to one
 
 # Credentials for tableau server
-tableau.server.username<-"myServerUsername"
-tableau.server.password<-"myServerPassword"
+tableau.server.username<-"<My Login>"
+tableau.server.password<-"<My Password>"
+tableau.server.path<-"http://my.url"
 
 # Directories for utilities and local data storage. Note the slash direction
 tabcmd.directory<-"C:/Program Files/Tableau/Tableau Server/8.1/bin/"

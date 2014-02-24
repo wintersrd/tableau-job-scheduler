@@ -62,7 +62,7 @@ for (i in 2:nrow(running.backgrounders)){
 		}
 	}
 
-system(paste("tabcmd login -u ", tableau.server.username," -p ",tableau.server.password,sep=""))
+system(paste("tabcmd login -s ",tableau.server.path," -u ", tableau.server.username," -p ",tableau.server.password,sep=""))
 # Now we need to restart the processes and record the event to vertica
 for (j in 1:nrow(above.threshold)){
 	refresh.type<-if(above.threshold[j,"tasktype"]=="Workbook"){"workbook"}else{"datasource"}
@@ -108,7 +108,7 @@ run.attempts<-sqlQuery(tracking.database, paste("select jobName
 failed.jobs<-failed.jobs[!failed.jobs$title %in% run.attempts[,1],]
 
 if (nrow(failed.jobs)>0){
-system(paste("tabcmd login -u ", tabcmd.login," -p ",tabcmd.password,sep=""))
+system(paste("tabcmd login -s ",tableau.server.path," -u ", tabcmd.login," -p ",tabcmd.password,sep=""))
 for (j in 1:nrow(failed.jobs)){
 	refresh.type<-if(failed.jobs[j,"subtitle"]=="Workbook"){"workbook"}else{"datasource"}
 	system(paste('tabcmd refreshextracts --',refresh.type,' "',failed.jobs[j,1],'"',sep=''))

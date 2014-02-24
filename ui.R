@@ -2,10 +2,10 @@ source('functions.R')
 source('variables.R')
 
 load_libraries(c('shiny','shinyIncubator','RODBC'))
-tracking.server<-odbcConnect(tracking.database.odbc.dsn)
-tableau.server<-odbcConnect(tableau.odbc.dsn)
+tracking.database<-odbcConnect(tracking.database.odbc.dsn)
+tableau.database<-odbcConnect(tableau.odbc.dsn)
 
-odbc.connections<-sqlQuery(tracking.server,paste("select connectionId
+odbc.connections<-sqlQuery(tracking.database,paste("select connectionId
 									, odbcName
 									, sourceDbType
 									, sourceServer
@@ -14,7 +14,7 @@ odbc.connections<-sqlQuery(tracking.server,paste("select connectionId
 									order by odbcName asc",sep=""))
 if(nrow(odbc.connections)==0){odbc.connections<-data.frame(connectionid=c("None Found","Please Create At Least One Connection"),odbcname=c("None Found","Please Create At Least One Connection"))}
 
-subscription.times<-sqlQuery(tableau.server,"select schedule_name 
+subscription.times<-sqlQuery(tableau.database,"select schedule_name 
                                               from _subscriptions 
                                               group by 1 
                                               order by 1
