@@ -12,6 +12,7 @@ potential.jobs<-sqlQuery(tracking.database, paste("select dataConnector
 													, jobId
 													, confidence
 													, sourceType
+													, projectName
 
 													from ", tracking.schema,".job_scheduler
 
@@ -50,8 +51,8 @@ for (i in 1:nrow(job.list)) { # This loop will check corresponding fact tables f
 																from ",job.list[i,3],"
 																having count(*) > ",job.list[i,7],sep=""))
 						if(nrow(db.check)>0){
-							output.record<-c(job.list[i,1],job.list[i,8],job.list[i,7],db.check[1,1],job.list[i,10])
-							names(output.record)<-c("dataconnector","jobid","lastrowcount","currentrowcount","sourcetype")
+							output.record<-c(job.list[i,1],job.list[i,8],job.list[i,7],db.check[1,1],job.list[i,10],job.list[i,11])
+							names(output.record)<-c("dataconnector","jobid","lastrowcount","currentrowcount","sourcetype","project")
 							updated.datasources<-rbind(updated.datasources,output.record)
 						}
 						odbcClose(db.connection)
@@ -79,6 +80,6 @@ for(i in 1:nrow(updated.datasources)){
 										set lastRun = current_timestamp
 										, lastRowCount = ", updated.datasources[i,4],"
 										where jobid = ", updated.datasources[i,2], sep=""))
-	system(paste('tabcmd refreshextracts --', updated.datasources[i,5], ' "',updated.datasources[i,1],'"',sep=''), wait=T)
+	system(paste('tabcmd refreshextracts --project "', updated.datasources[i,6],'" --', updated.datasources[i,5], ' "',updated.datasources[i,1],'"',sep=''), wait=T)
 }
 setwd(default.working.directory)

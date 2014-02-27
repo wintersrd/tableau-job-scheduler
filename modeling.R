@@ -12,7 +12,7 @@ if(nrow(models.to.update)>0){
 		updates.per.day<-table(format(modeling.data$updatetime,"%Y-%m-%d"))
 		update.frequency<-ceiling(mean(updates.per.day)) # We take the mean updates per day to estimate how often new data is available. This should ideally be a weighted mean
 		
-		confidence<-max((nrow(modeling.data)/runs.before.confidence)^1.5,1) # Confidence will increase slowly at first (meaning the scheduler will try more often) then ramp to peak confidence. Need to integrate additional sampling
+		confidence<-min((nrow(modeling.data)/runs.before.confidence)^1.5,1) # Confidence will increase slowly at first (meaning the scheduler will try more often) then ramp to peak confidence. Need to integrate additional sampling
 
 		sqlQuery(tracking.database,paste("update ",tracking.schema,".job_scheduler
 										set baseTimeOfDay = ", baseline.update.time,"

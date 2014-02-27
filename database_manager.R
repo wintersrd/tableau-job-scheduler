@@ -5,6 +5,7 @@ tableau.database<-odbcConnect(tableau.odbc.dsn)
 sqlQuery(tracking.database, paste("create table if not exists ",tracking.schema,".job_scheduler (
 									jobId serial
 									, dataConnector varchar(500)
+									, projectName varchar(500)
 									, sourceDbType varchar(500)
 									, sourceServer varchar(500)
 									, sourceType varchar(500)
@@ -54,6 +55,7 @@ sqlQuery(tracking.database,paste("create table if not exists ",tracking.schema,"
 
 # Make sure all connectors are present in the necessary tables - even before able to auto-schedule, we can start gathering performance data
 data.connectors<-sqlQuery(tableau.database,paste("select name as dataConnector
+											, project_name
 											, cast(null as varchar(500)) as sourceDbType
 											, cast(null as varchar(500)) as sourceServer
 											, 'workbook' as sourceType
@@ -64,6 +66,7 @@ data.connectors<-sqlQuery(tableau.database,paste("select name as dataConnector
 											union
 
 										select name as dataConnector
+											, project_name
 											, dbclass as sourceDbType
 											, server as sourceServer
 											, 'datasource' as sourceType
@@ -82,8 +85,8 @@ if (nrow(existing.data.connectors)>0) {
 # We will initialize all connections when available to check hourly until knowing better
 if (nrow(new.data.connectors)>0){
   for (i in 1:nrow(new.data.connectors)){
-  	sqlQuery(tracking.database,paste("insert into ", tracking.schema,".job_scheduler (dataConnector, sourceDbType, sourceServer, sourceType, baseTimeOfDay, frequency, lastrowcount,confidence,lastRun,modelLastUpdate) 
-  	                                 values ('",new.data.connectors[i,1],"','",new.data.connectors[i,2],"','",new.data.connectors[i,3],"','",new.data.connectors[i,4],"',0,24,0,0.1,current_timestamp-interval '1 hour', current_timestamp-interval '1 hour');commit;",sep=""))
+  	sqlQuery(tracking.database,paste("insert into ", tracking.schema,".job_scheduler (dataConnector, projectName, sourceDbType, sourceServer, sourceType, baseTimeOfDay, frequency, lastrowcount,confidence,lastRun,modelLastUpdate) 
+  	                                 values ('",new.data.connectors[i,1],"','",new.data.connectors[i,2],"','",new.data.connectors[i,3],"','",new.data.connectors[i,4],"','",new.data.connectors[i,5],"',0,24,0,0.1,current_timestamp-interval '1 hour', current_timestamp-interval '1 hour');commit;",sep=""))
   }
 }
   
